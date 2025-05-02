@@ -1,20 +1,39 @@
 import React, { useState } from "react";
 import { Transaction } from "../types";
-import { Eye, EyeOff, Filter, PlusCircle, MinusCircle } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Filter,
+  PlusCircle,
+  MinusCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
   transactions: Transaction[];
 }
 
+const ITEMS_PER_PAGE = 10;
+
 const TransactionHistory: React.FC<Props> = ({ transactions }) => {
   const [filter, setFilter] = useState<"all" | "topup" | "withdraw">("all");
   const [show, setShow] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredTransactions =
+  const filtered =
     filter === "all"
       ? transactions
       : transactions.filter((tx) => tx.type === filter);
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentItems = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+  const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNext = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   return (
     <div className="mt-6 p-4 border rounded-xl shadow bg-white">
@@ -24,8 +43,8 @@ const TransactionHistory: React.FC<Props> = ({ transactions }) => {
           Riwayat Transaksi
         </h3>
         <button
-          onClick={() => setShow((prev) => !prev)}
-          className="text-sm text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+          onClick={() => setShow(!show)}
+          className="text-sm text-blue-600 hover:underline flex items-center gap-1"
         >
           {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           {show ? "Sembunyikan" : "Tampilkan"}
@@ -45,9 +64,10 @@ const TransactionHistory: React.FC<Props> = ({ transactions }) => {
               <select
                 className="border rounded px-2 py-1 text-sm"
                 value={filter}
-                onChange={(e) =>
-                  setFilter(e.target.value as "all" | "topup" | "withdraw")
-                }
+                onChange={(e) => {
+                  setFilter(e.target.value as "all" | "topup" | "withdraw");
+                  setCurrentPage(1);
+                }}
               >
                 <option value="all">Semua</option>
                 <option value="topup">Top Up</option>
@@ -55,11 +75,11 @@ const TransactionHistory: React.FC<Props> = ({ transactions }) => {
               </select>
             </div>
 
-            {filteredTransactions.length === 0 ? (
+            {currentItems.length === 0 ? (
               <p className="text-gray-500">Tidak ada transaksi</p>
             ) : (
-              <ul className="space-y-2">
-                {filteredTransactions.map((tx) => (
+              <ul className="space-y-2 mb-4">
+                {currentItems.map((tx) => (
                   <li
                     key={tx.id}
                     className="flex items-center justify-between border-b pb-1 text-sm"
@@ -83,6 +103,28 @@ const TransactionHistory: React.FC<Props> = ({ transactions }) => {
                   </li>
                 ))}
               </ul>
+            )}
+
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1 text-sm text-blue-600 disabled:opacity-50"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Sebelumnya
+                </button>
+                <span className="text-sm text-gray-700">
+                  Halaman {currentPage} dari {totalPages}
+                </span>
+                <button
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1 text-sm text-blue-600 disabled:opacity-50"
+                >
+                  Selanjutnya <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             )}
           </motion.div>
         )}
