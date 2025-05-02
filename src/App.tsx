@@ -4,6 +4,7 @@ import Balance from "./components/Balance";
 import TransactionForm from "./components/TransactionForm";
 import TransactionHistory from "./components/TransactionHistory";
 import { Transaction } from "./types";
+import toast, { Toaster } from "react-hot-toast";
 
 const App: React.FC = () => {
   const [balance, setBalance] = useState<number>(0);
@@ -41,12 +42,16 @@ const App: React.FC = () => {
       if (res.data.success) {
         setBalance(res.data.balance);
         setTransactions((prev) => [res.data.transaction, ...prev]);
+
+        toast.success(
+          `${type === "topup" ? "Top Up" : "Tarik Dana"} berhasil!`
+        );
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.error || "Terjadi kesalahan.");
+        toast.error(error.response?.data?.error || "Terjadi kesalahan.");
       } else {
-        alert("Terjadi kesalahan tidak terduga.");
+        toast.error("Terjadi kesalahan tidak terduga.");
       }
     } finally {
       setLoading(false);
@@ -55,6 +60,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-10">
+      <Toaster position="top-right" />
       <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Dompet Digital</h1>
         <Balance balance={balance} />
